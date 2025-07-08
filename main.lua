@@ -25,15 +25,18 @@ function love.load()
 end
 
 function love.keypressed(key)
-	if key ~= player.direction then
-		player.direction = player.direction == "right" and "left" or "right"
+	player:keypressed(key)
+end
+
+function love.keyreleased(key)
+	if key == "escape" then
+		love.event.quit()
 	end
+	player:keyreleased(key)
 end
 
 function love.update(dt)
-	if love.keyboard.isDown("right") then
-	elseif love.keyboard.isDown("left") then
-	end
+	player:update(dt)
 end
 
 function love.draw()
