@@ -4,8 +4,11 @@ local function Player(anim8)
 	player.y = nil
 	player.speed = 1
 	player.direction = "right"
-	player.sprite = {}
-	player.sprite.current = love.graphics.newImage("img/character-8x8.png")
+
+	player.setPos = function(self, x, y)
+		player.x, player.y = x, y
+	end
+
 	player.sptireSheet = love.graphics.newImage("img/characterSpriteSheet.png")
 	player.grid = anim8.newGrid(8, 8, player.sptireSheet:getWidth(), player.sptireSheet:getHeight())
 

@@ -21,7 +21,10 @@ function love.load()
 	love.graphics.setDefaultFilter("nearest", "nearest")
 
 	player = Player(anim8)
-	map = Map(anim8)
+	map = Map()
+	map:loadID()
+	--map:print()
+	player:setPos(map:getPlayerPos(spriteSize))
 end
 
 function love.keypressed(key)
@@ -42,7 +45,7 @@ end
 function love.draw()
 	-- force resolution while drawing objects inside push
 	push:start()
-
+	map:draw(spriteSize)
 	player:draw()
 	push:finish()
 end
