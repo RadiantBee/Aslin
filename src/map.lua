@@ -22,7 +22,9 @@ local function Map(startMapID)
 	map.id = startMapID or 0
 	map.sprite = {}
 	map.sprite.wall = love.graphics.newImage("img/square.png")
-
+	-- approximate player coordinates
+	map.playerX = nil
+	map.playerY = nil
 	map.data = {}
 	map.loadID = function(self)
 		local mapFile = io.open("maps/map_" .. self.id .. ".MP", "r")
@@ -36,6 +38,128 @@ local function Map(startMapID)
 		end
 		mapFile:close()
 	end
+
+	map.update = function(self, playerX, playerY, spriteSize)
+		-- We take the center of playerSprite to evaluate grid position
+		local gridX = math.floor((playerX + (spriteSize / 2)) / spriteSize) + 1
+		local gridY = math.floor((playerY + (spriteSize / 2)) / spriteSize) + 1
+		-- If the "grid-ified" position of player changed, we update it
+		if gridX ~= self.playerX or gridY ~= self.playerY then
+			self.data[self.playerY][self.playerX] = 0
+			self.data[gridY][gridX] = 2
+			self.playerX = gridX
+			self.playerY = gridY
+		end
+	end
+
+	map.resolveCollisions = function(self, player, spriteSize)
+		-- depending on dirrection of movement, we'll check the objects on collisions
+		local collisionDetected = false
+		-- for x axis
+		if player.xDir > 0 then
+			if self.data[self.playerY - 1][self.playerX + 1] == "1" then
+				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
+					if player.y + 1 < (self.playerY - 1) * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY][self.playerX + 1] == "1" and not collisionDetected then
+				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
+					if
+						player.y + 1 < self.playerY * spriteSize
+						and player.y + spriteSize > self.playerY * spriteSize
+					then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY + 1][self.playerX + 1] == "1" and not collisionDetected then
+				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
+					if player.y + spriteSize > (self.playerY + 1) * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if not collisionDetected then
+				player.x = player.x + player.xDir
+			else
+				player.x = (self.playerX - 1) * spriteSize + player.collisionOffset
+			end
+		-- moving left
+		elseif player.xDir < 0 then
+			if self.data[self.playerY - 1][self.playerX - 1] == "1" then
+				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
+					if player.y + 1 < (self.playerY - 1) * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY][self.playerX - 1] == "1" and not collisionDetected then
+				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
+					if
+						player.y + 1 < (self.playerY + 1) * spriteSize
+						and player.y + spriteSize > self.playerY * spriteSize
+					then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY + 1][self.playerX - 1] == "1" and not collisionDetected then
+				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
+					if player.y + spriteSize > self.playerY * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if not collisionDetected then
+				player.x = player.x + player.xDir
+			else
+				player.x = (self.playerX - 1) * spriteSize - player.collisionOffset
+			end
+		end
+		-- now looking at y axis
+		collisionDetected = false
+		if player.yDir > 0 then
+			if self.data[self.playerY + 1][self.playerX - 1] == "1" then
+				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
+					if player.x + player.collisionOffset < (self.playerX - 1) * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY + 1][self.playerX] == "1" and not collisionDetected then
+				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
+					if
+						player.x + player.collisionOffset <= self.playerX * spriteSize
+						and player.x + spriteSize - player.collisionOffset >= (self.playerX - 1) * spriteSize
+					then
+						collisionDetected = true
+					end
+				end
+			end
+			if self.data[self.playerY + 1][self.playerX + 1] == "1" and not collisionDetected then
+				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
+					if player.x + spriteSize - player.collisionOffset >= (self.playerX - 1) * spriteSize then
+						collisionDetected = true
+					end
+				end
+			end
+			if not collisionDetected then
+				player.y = player.y + player.yDir
+			else
+				player.y = (self.playerY - 1) * spriteSize
+				player.yAcc = player.gravityMax
+			end
+		elseif player.yDir < 0 then
+			if not collisionDetected then
+				player.y = player.y + player.yDir
+			else
+				player.y = (self.playerY - 1) * spriteSize
+			end
+		end
+	end
+
 	map.print = function(self)
 		for y, row in ipairs(self.data) do
 			for x, obj in ipairs(row) do
@@ -49,6 +173,8 @@ local function Map(startMapID)
 		for y, row in ipairs(self.data) do
 			for x, obj in ipairs(row) do
 				if obj == "2" then
+					self.playerX = x
+					self.playerY = y
 					return (x - 1) * spriteSize, (y - 1) * spriteSize
 				end
 			end
@@ -59,8 +185,7 @@ local function Map(startMapID)
 	map.draw = function(self, spriteSize)
 		for y, row in ipairs(self.data) do
 			for x, obj in ipairs(row) do
-				if obj == "0" then
-				elseif obj == "1" then
+				if obj == "1" then
 					love.graphics.draw(self.sprite.wall, (x - 1) * spriteSize, (y - 1) * spriteSize)
 				end
 			end

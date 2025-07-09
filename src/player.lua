@@ -2,7 +2,14 @@ local function Player(anim8)
 	local player = {}
 	player.x = nil
 	player.y = nil
-	player.speed = 1
+	player.collisionOffset = 2
+	player.speed = 10
+	player.gravityMax = 16
+	player.jumpForce = -10
+	player.gravitySpeed = 2
+	player.yAcc = 16
+	player.xDir = 0
+	player.yDir = 0
 	player.direction = "right"
 
 	player.setPos = function(self, x, y)
@@ -58,6 +65,10 @@ local function Player(anim8)
 				self.animation.current = self.animation.turnRight
 			end
 		end
+		-- jumping
+		if key == "space" or key == "up" then
+			self.yAcc = self.jumpForce
+		end
 	end
 
 	player.keyreleased = function(self, key)
@@ -70,16 +81,29 @@ local function Player(anim8)
 	end
 
 	player.update = function(self, dt)
+		self.xDir = 0
 		if love.keyboard.isDown("right") then
 			-- we play walking animation only if we were idle before
 			if self.animation.current == self.animation.idleRight then
 				self.animation.current = self.animation.walkRight
 			end
+			self.xDir = self.xDir + self.speed * dt
 		elseif love.keyboard.isDown("left") then
 			if self.animation.current == self.animation.idleLeft then
 				self.animation.current = self.animation.walkLeft
 			end
+			self.xDir = self.xDir - self.speed * dt
 		end
+
+		self.yDir = 0
+		if self.yAcc < self.gravityMax then
+			self.yAcc = self.yAcc + self.gravitySpeed * dt
+		else
+			self.yAcc = self.gravityMax
+		end
+		print(self.yAcc)
+		self.yDir = self.yAcc * dt
+
 		self.animation.current:update(dt)
 	end
 

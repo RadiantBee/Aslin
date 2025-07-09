@@ -5,11 +5,12 @@ local Player = require("src/player")
 
 -- Some data to initialize window
 local spriteSize = 8
-local windowFactor = 0.8
+local windowFactorWidth = 0.6
+local windowFactorHeight = 0.8
 local spriteCapacityWidth, spriteCapacityHeight = 16, 16
 
 local screenWidth, screenHeight = love.window.getDesktopDimensions()
-local windowWidth, windowHeight = screenWidth * windowFactor, screenHeight * windowFactor
+local windowWidth, windowHeight = screenWidth * windowFactorWidth, screenHeight * windowFactorHeight
 local virtualWidth, virtualHeight = spriteSize * spriteCapacityWidth, spriteSize * spriteCapacityHeight
 
 -- Game objects
@@ -23,7 +24,7 @@ function love.load()
 	player = Player(anim8)
 	map = Map()
 	map:loadID()
-	--map:print()
+	map:print()
 	player:setPos(map:getPlayerPos(spriteSize))
 end
 
@@ -40,6 +41,8 @@ end
 
 function love.update(dt)
 	player:update(dt)
+	map:resolveCollisions(player, spriteSize)
+	map:update(player.x, player.y, spriteSize)
 end
 
 function love.draw()
@@ -47,5 +50,7 @@ function love.draw()
 	push:start()
 	map:draw(spriteSize)
 	player:draw()
+	print("Memory used: " .. math.ceil(collectgarbage("count")) .. " kB")
+	print("Current FPS: " .. tostring(love.timer.getFPS()))
 	push:finish()
 end
