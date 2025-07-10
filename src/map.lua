@@ -51,113 +51,110 @@ local function Map(startMapID)
 			self.playerY = gridY
 		end
 	end
+	-- useCurrent is 1 or 0, it can exclude dirrection from formula
+	map.checkBottomAdjacent = function(player, targetY, spriteSize, useCurrent)
+		return player.y + player.topOffset + player.yDir * useCurrent < targetY * spriteSize
+	end
 
+	map.checkTopAdjacent = function(player, targetY, spriteSize, useCurrent)
+		return player.y + spriteSize + player.yDir * useCurrent > (targetY - 1) * spriteSize
+	end
+	map.checkYAdjacent = function(self, player, targetY, spriteSize, useCurrent)
+		return self.checkBottomAdjacent(player, targetY, spriteSize, useCurrent)
+			and self.checkTopAdjacent(player, targetY, spriteSize, useCurrent)
+	end
+	map.checkLeftAdjacent = function(player, targetX, spriteSize, useCurrent)
+		return player.x + spriteSize + player.xDir * useCurrent - player.collisionOffset > (targetX - 1) * spriteSize
+	end
+
+	map.checkRightAdjacent = function(player, targetX, spriteSize, useCurrent)
+		return player.x + player.collisionOffset + player.xDir * useCurrent < targetX * spriteSize
+	end
+	map.checkXAdjacent = function(self, player, targetX, spriteSize, useCurrent)
+		return self.checkLeftAdjacent(player, targetX, spriteSize, useCurrent)
+			and self.checkRightAdjacent(player, targetX, spriteSize, useCurrent)
+	end
+	-- resolves target collision
+	map.collisionResolveX = function(self, player, target, spriteSize)
+		if target == "1" then
+			if player.xDir > 0 then
+				player.x = (self.playerX - 1) * spriteSize + player.collisionOffset
+			elseif player.xDir < 0 then
+				player.x = (self.playerX - 1) * spriteSize - player.collisionOffset
+			end
+			player.xDir = 0
+		end
+	end
+	map.collisionResolveY = function(self, player, target, spriteSize)
+		if target == "1" then
+			if player.yDir > 0 then
+				player.y = (self.playerY - 1) * spriteSize
+				player.yAcc = player.gravityMax
+			elseif player.yDir < 0 then
+				player.y = (self.playerY - 1) * spriteSize + player.topOffset
+				player.yAcc = 0
+			end
+			player.yDir = 0
+		end
+	end
+	-- for every collision
 	map.resolveCollisions = function(self, player, spriteSize)
 		-- depending on dirrection of movement, we'll check the objects on collisions
-		local collisionDetected = false
 		-- for x axis
 		if player.xDir > 0 then
-			if self.data[self.playerY - 1][self.playerX + 1] == "1" then
-				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
-					if player.y + 1 < (self.playerY - 1) * spriteSize then
-						collisionDetected = true
-					end
+			if self.checkLeftAdjacent(player, self.playerX + 1, spriteSize, 1) then
+				if self.checkBottomAdjacent(player, self.playerY - 1, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY - 1][self.playerX + 1], spriteSize)
 				end
-			end
-			if self.data[self.playerY][self.playerX + 1] == "1" and not collisionDetected then
-				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
-					if
-						player.y + 1 < self.playerY * spriteSize
-						and player.y + spriteSize > self.playerY * spriteSize
-					then
-						collisionDetected = true
-					end
+				if self:checkYAdjacent(player, self.playerY, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY][self.playerX + 1], spriteSize)
 				end
-			end
-			if self.data[self.playerY + 1][self.playerX + 1] == "1" and not collisionDetected then
-				if player.x + spriteSize + player.xDir - player.collisionOffset >= self.playerX * spriteSize then
-					if player.y + spriteSize > (self.playerY + 1) * spriteSize then
-						collisionDetected = true
-					end
+				if self.checkTopAdjacent(player, self.playerY + 1, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY + 1][self.playerX + 1], spriteSize)
 				end
-			end
-			if not collisionDetected then
-				player.x = player.x + player.xDir
-			else
-				player.x = (self.playerX - 1) * spriteSize + player.collisionOffset
 			end
 		-- moving left
 		elseif player.xDir < 0 then
-			if self.data[self.playerY - 1][self.playerX - 1] == "1" then
-				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
-					if player.y + 1 < (self.playerY - 1) * spriteSize then
-						collisionDetected = true
-					end
+			if self.checkRightAdjacent(player, self.playerX - 1, spriteSize, 1) then
+				if self.checkBottomAdjacent(player, self.playerY - 1, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY - 1][self.playerX - 1], spriteSize)
 				end
-			end
-			if self.data[self.playerY][self.playerX - 1] == "1" and not collisionDetected then
-				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
-					if
-						player.y + 1 < (self.playerY + 1) * spriteSize
-						and player.y + spriteSize > self.playerY * spriteSize
-					then
-						collisionDetected = true
-					end
+				if self:checkYAdjacent(player, self.playerY, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY][self.playerX - 1], spriteSize)
 				end
-			end
-			if self.data[self.playerY + 1][self.playerX - 1] == "1" and not collisionDetected then
-				if player.x + player.xDir + player.collisionOffset <= (self.playerX - 1) * spriteSize then
-					if player.y + spriteSize > self.playerY * spriteSize then
-						collisionDetected = true
-					end
+				if self.checkTopAdjacent(player, self.playerY + 1, spriteSize, 0) then
+					self:collisionResolveX(player, self.data[self.playerY + 1][self.playerX - 1], spriteSize)
 				end
-			end
-			if not collisionDetected then
-				player.x = player.x + player.xDir
-			else
-				player.x = (self.playerX - 1) * spriteSize - player.collisionOffset
 			end
 		end
+		player.x = player.x + player.xDir
 		-- now looking at y axis
-		collisionDetected = false
 		if player.yDir > 0 then
-			if self.data[self.playerY + 1][self.playerX - 1] == "1" then
-				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
-					if player.x + player.collisionOffset < (self.playerX - 1) * spriteSize then
-						collisionDetected = true
-					end
+			if self.checkTopAdjacent(player, self.playerY + 1, spriteSize, 1) then
+				if self.checkRightAdjacent(player, self.playerX - 1, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY + 1][self.playerX - 1], spriteSize)
 				end
-			end
-			if self.data[self.playerY + 1][self.playerX] == "1" and not collisionDetected then
-				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
-					if
-						player.x + player.collisionOffset <= self.playerX * spriteSize
-						and player.x + spriteSize - player.collisionOffset >= (self.playerX - 1) * spriteSize
-					then
-						collisionDetected = true
-					end
+				if self:checkXAdjacent(player, self.playerX, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY + 1][self.playerX], spriteSize)
 				end
-			end
-			if self.data[self.playerY + 1][self.playerX + 1] == "1" and not collisionDetected then
-				if player.y + player.yDir + spriteSize >= self.playerY * spriteSize then
-					if player.x + spriteSize - player.collisionOffset >= (self.playerX - 1) * spriteSize then
-						collisionDetected = true
-					end
+				if self.checkLeftAdjacent(player, self.playerX + 1, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY + 1][self.playerX + 1], spriteSize)
 				end
-			end
-			if not collisionDetected then
-				player.y = player.y + player.yDir
-			else
-				player.y = (self.playerY - 1) * spriteSize
-				player.yAcc = player.gravityMax
 			end
 		elseif player.yDir < 0 then
-			if not collisionDetected then
-				player.y = player.y + player.yDir
-			else
-				player.y = (self.playerY - 1) * spriteSize
+			if self.checkBottomAdjacent(player, self.playerY - 1, spriteSize, 1) then
+				if self.checkRightAdjacent(player, self.playerX - 1, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY - 1][self.playerX - 1], spriteSize)
+				end
+				if self:checkXAdjacent(player, self.playerX, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY - 1][self.playerX], spriteSize)
+				end
+				if self.checkLeftAdjacent(player, self.playerX + 1, spriteSize, 0) then
+					self:collisionResolveY(player, self.data[self.playerY - 1][self.playerX + 1], spriteSize)
+				end
 			end
 		end
+		player.y = player.y + player.yDir
 	end
 
 	map.print = function(self)

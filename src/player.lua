@@ -3,17 +3,18 @@ local function Player(anim8)
 	player.x = nil
 	player.y = nil
 	player.collisionOffset = 2
+	player.topOffset = 1
 	player.speed = 10
 	player.gravityMax = 16
-	player.jumpForce = -10
-	player.gravitySpeed = 2
+	player.jumpForce = -16
+	player.gravitySpeed = 10
 	player.yAcc = 16
 	player.xDir = 0
 	player.yDir = 0
 	player.direction = "right"
 
 	player.setPos = function(self, x, y)
-		player.x, player.y = x, y
+		self.x, self.y = x, y
 	end
 
 	player.sptireSheet = love.graphics.newImage("img/characterSpriteSheet.png")
@@ -101,7 +102,6 @@ local function Player(anim8)
 		else
 			self.yAcc = self.gravityMax
 		end
-		print(self.yAcc)
 		self.yDir = self.yAcc * dt
 
 		self.animation.current:update(dt)

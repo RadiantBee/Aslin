@@ -24,7 +24,7 @@ function love.load()
 	player = Player(anim8)
 	map = Map()
 	map:loadID()
-	map:print()
+	--map:print()
 	player:setPos(map:getPlayerPos(spriteSize))
 end
 
@@ -50,7 +50,7 @@ function love.draw()
 	push:start()
 	map:draw(spriteSize)
 	player:draw()
-	print("Memory used: " .. math.ceil(collectgarbage("count")) .. " kB")
-	print("Current FPS: " .. tostring(love.timer.getFPS()))
+	--print("Memory used: " .. math.ceil(collectgarbage("count")) .. " kB")
+	--print("Current FPS: " .. tostring(love.timer.getFPS()))
 	push:finish()
 end
