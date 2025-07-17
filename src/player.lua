@@ -5,9 +5,10 @@ local function Player(anim8)
 	player.collisionOffset = 2
 	player.topOffset = 1
 	player.speed = 10
-	player.gravityMax = 16
-	player.jumpForce = -16
-	player.gravitySpeed = 10
+	player.gravityMax = 20
+	player.jumpForce = -20
+	player.gravitySpeed = 20
+	player.onGround = false
 	player.yAcc = 16
 	player.xDir = 0
 	player.yDir = 0
@@ -68,7 +69,10 @@ local function Player(anim8)
 		end
 		-- jumping
 		if key == "space" or key == "up" then
-			self.yAcc = self.jumpForce
+			if self.onGround then
+				self.yAcc = self.jumpForce
+				self.onGround = false
+			end
 		end
 	end
 

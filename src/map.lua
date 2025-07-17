@@ -90,6 +90,7 @@ local function Map(startMapID)
 			if player.yDir > 0 then
 				player.y = (self.playerY - 1) * spriteSize
 				player.yAcc = player.gravityMax
+				player.onGround = true
 			elseif player.yDir < 0 then
 				player.y = (self.playerY - 1) * spriteSize - player.topOffset
 				player.yAcc = 0
@@ -155,6 +156,9 @@ local function Map(startMapID)
 			end
 		end
 		player.y = player.y + player.yDir
+		if player.yDir ~= 0 then
+			player.onGround = false
+		end
 	end
 
 	map.print = function(self)
