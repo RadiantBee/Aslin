@@ -91,7 +91,7 @@ local function Map(startMapID)
 				player.y = (self.playerY - 1) * spriteSize
 				player.yAcc = player.gravityMax
 			elseif player.yDir < 0 then
-				player.y = (self.playerY - 1) * spriteSize + player.topOffset
+				player.y = (self.playerY - 1) * spriteSize - player.topOffset
 				player.yAcc = 0
 			end
 			player.yDir = 0
