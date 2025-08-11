@@ -22,9 +22,12 @@ local function Map(startMapID)
 	map.id = startMapID or 0
 	map.sprite = {}
 	map.sprite.wall = love.graphics.newImage("img/square.png")
+	map.sprite.flag = love.graphics.newImage("img/flag.png")
 	-- approximate player coordinates
 	map.playerX = nil
 	map.playerY = nil
+	map.startX = nil
+	map.startY = nil
 	map.data = {}
 	map.loadID = function(self)
 		local mapFile = io.open("maps/map_" .. self.id .. ".MP", "r")
@@ -75,6 +78,13 @@ local function Map(startMapID)
 			and self.checkRightAdjacent(player, targetX, spriteSize, useCurrent)
 	end
 	-- resolves target collision
+	map.collisionResolveUniversal = function(self, player, target)
+		if target == "3" then -- flag
+		-- TODO: load next level
+		elseif target == "4" then -- lava
+			player:explode()
+		end
+	end
 	map.collisionResolveX = function(self, player, target, spriteSize)
 		if target == "1" then
 			if player.xDir > 0 then
@@ -83,6 +93,8 @@ local function Map(startMapID)
 				player.x = (self.playerX - 1) * spriteSize - player.collisionOffset
 			end
 			player.xDir = 0
+		else
+			self:collisionResolveUniversal(player, target)
 		end
 	end
 	map.collisionResolveY = function(self, player, target, spriteSize)
@@ -96,6 +108,8 @@ local function Map(startMapID)
 				player.yAcc = 0
 			end
 			player.yDir = 0
+		else
+			self:collisionResolveUniversal(player, target)
 		end
 	end
 	-- for every collision
@@ -174,8 +188,10 @@ local function Map(startMapID)
 		for y, row in ipairs(self.data) do
 			for x, obj in ipairs(row) do
 				if obj == "2" then
-					self.playerX = x
-					self.playerY = y
+					self.startX = x
+					self.startY = y
+					self.playerX = self.startX
+					self.playerY = self.startY
 					return (x - 1) * spriteSize, (y - 1) * spriteSize
 				end
 			end
@@ -188,6 +204,12 @@ local function Map(startMapID)
 			for x, obj in ipairs(row) do
 				if obj == "1" then
 					love.graphics.draw(self.sprite.wall, (x - 1) * spriteSize, (y - 1) * spriteSize)
+				elseif obj == "3" then
+					love.graphics.draw(self.sprite.flag, (x - 1) * spriteSize, (y - 1) * spriteSize)
+				elseif obj == "4" then
+					love.graphics.setColor(1, 0, 0)
+					love.graphics.draw(self.sprite.wall, (x - 1) * spriteSize, (y - 1) * spriteSize)
+					love.graphics.setColor(1, 1, 1)
 				end
 			end
 		end

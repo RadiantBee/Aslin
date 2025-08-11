@@ -25,7 +25,7 @@ function love.load()
 	map = Map()
 	map:loadID()
 	--map:print()
-	player:setPos(map:getPlayerPos(spriteSize))
+	player:setStartPos(map:getPlayerPos(spriteSize))
 end
 
 function love.keypressed(key)
