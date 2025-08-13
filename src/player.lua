@@ -60,6 +60,7 @@ local function Player(anim8)
 	local function reset()
 		player.animation.current = player.animation.idleRight
 		player.x, player.y = player.startX, player.startY
+		player.direction = "right"
 		player.exploding = false
 	end
 
