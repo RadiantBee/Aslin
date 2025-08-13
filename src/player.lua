@@ -17,6 +17,15 @@ local function Player(anim8)
 	player.direction = "right"
 	player.exploding = false
 
+	player.sound = {}
+	player.sound.jump = love.audio.newSource("sounds/jump.wav", "static")
+	player.sound.jump:setVolume(0.2)
+	player.sound.explode = love.audio.newSource("sounds/explosion.mp3", "static")
+	player.sound.explode:setVolume(0.2)
+	player.sound.land = love.audio.newSource("sounds/landed.wav", "static")
+	player.sound.land:setVolume(0.2)
+	player.sound.mapChange = love.audio.newSource("sounds/nextMap.wav", "static")
+	player.sound.mapChange:setVolume(0.2)
 	player.setPos = function(self, x, y)
 		self.x, self.y = x, y
 	end
@@ -57,6 +66,7 @@ local function Player(anim8)
 	player.animation.explode = anim8.newAnimation(player.gridExplosion("1-17", 1), 0.05, reset)
 
 	player.explode = function(self)
+		self.sound.explode:play()
 		self.exploding = true
 		self.animation.current = self.animation.explode
 	end
@@ -97,6 +107,7 @@ local function Player(anim8)
 			-- jumping
 			if key == "space" or key == "up" then
 				if self.onGround then
+					self.sound.jump:play()
 					self.yAcc = self.jumpForce
 					self.onGround = false
 				end

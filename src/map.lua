@@ -32,14 +32,17 @@ local function Map(startMapID)
 	map.loadID = function(self)
 		local mapFile = io.open("maps/map_" .. self.id .. ".MP", "r")
 		if not mapFile then
-			error('Cannot acces the "maps/map_' .. self.id .. '.MP" file!')
+			--error('Cannot acces the "maps/map_' .. self.id .. '.MP" file!')
+			self.id = 0
+			self:loadID()
+		else
+			local i = 1
+			for line in mapFile:lines("l") do
+				self.data[i] = split(line, " ")
+				i = i + 1
+			end
+			mapFile:close()
 		end
-		local i = 1
-		for line in mapFile:lines("l") do
-			self.data[i] = split(line, " ")
-			i = i + 1
-		end
-		mapFile:close()
 	end
 
 	map.update = function(self, playerX, playerY, spriteSize)
@@ -78,9 +81,12 @@ local function Map(startMapID)
 			and self.checkRightAdjacent(player, targetX, spriteSize, useCurrent)
 	end
 	-- resolves target collision
-	map.collisionResolveUniversal = function(self, player, target)
+	map.collisionResolveUniversal = function(self, player, target, spriteSize)
 		if target == "3" then -- flag
-		-- TODO: load next level
+			player.sound.mapChange:play()
+			self.id = self.id + 1
+			self:loadID()
+			player:setStartPos(self:getPlayerPos(spriteSize))
 		elseif target == "4" then -- lava
 			player:explode()
 		end
@@ -94,7 +100,7 @@ local function Map(startMapID)
 			end
 			player.xDir = 0
 		else
-			self:collisionResolveUniversal(player, target)
+			self:collisionResolveUniversal(player, target, spriteSize)
 		end
 	end
 	map.collisionResolveY = function(self, player, target, spriteSize)
@@ -102,14 +108,17 @@ local function Map(startMapID)
 			if player.yDir > 0 then
 				player.y = (self.playerY - 1) * spriteSize
 				player.yAcc = player.gravityMax
-				player.onGround = true
+				if not player.onGround then
+					player.onGround = true
+					player.sound.land:play()
+				end
 			elseif player.yDir < 0 then
 				player.y = (self.playerY - 1) * spriteSize - player.topOffset
 				player.yAcc = 0
 			end
 			player.yDir = 0
 		else
-			self:collisionResolveUniversal(player, target)
+			self:collisionResolveUniversal(player, target, spriteSize)
 		end
 	end
 	-- for every collision
