@@ -23,6 +23,7 @@ function love.load()
 
 	player = Player(anim8)
 	map = Map()
+	--map.id = 1
 	map:loadID()
 	--map:print()
 	player:setStartPos(map:getPlayerPos(spriteSize))

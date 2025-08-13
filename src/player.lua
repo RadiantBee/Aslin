@@ -6,10 +6,10 @@ local function Player(anim8)
 	player.startY = nil
 	player.collisionOffset = 2
 	player.topOffset = 1
-	player.speed = 10
-	player.gravityMax = 20
-	player.jumpForce = -20
-	player.gravitySpeed = 20
+	player.speed = 20
+	player.gravityMax = 60
+	player.jumpForce = -45
+	player.gravitySpeed = 60
 	player.onGround = false
 	player.yAcc = 16
 	player.xDir = 0
